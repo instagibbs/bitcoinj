@@ -67,7 +67,8 @@ public class MainNetParams extends AbstractBitcoinNetParams {
                 "dnsseed.bluematt.me",         // Matt Corallo
                 "dnsseed.bitcoin.dashjr.org",  // Luke Dashjr
                 "seed.bitcoinstats.com",       // Chris Decker
-                "seed.bitnodes.io",            // Addy Yeow
+                "bitseed.xf2.org",             // Jeff Garzik
+                "bitcoin.jonasschnelli.ch",    // Jonas Schnelli
         };
         httpSeeds = new HttpDiscovery.Details[] {
                 new HttpDiscovery.Details(
@@ -75,7 +76,7 @@ public class MainNetParams extends AbstractBitcoinNetParams {
                                 "027a79143a4de36341494d21b6593015af6b2500e720ad2eda1c0b78165f4f38c4".toUpperCase()
                         )),
 
-                        URI.create("http://main.seed.vinumeris.com/peers")
+                        URI.create("http://127.0.0.1/peers")
                 )
         };
 
