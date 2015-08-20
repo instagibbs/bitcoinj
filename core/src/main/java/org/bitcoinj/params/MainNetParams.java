@@ -76,7 +76,7 @@ public class MainNetParams extends AbstractBitcoinNetParams {
                                 "027a79143a4de36341494d21b6593015af6b2500e720ad2eda1c0b78165f4f38c4".toUpperCase()
                         )),
 
-                        URI.create("http://127.0.0.1/peers")
+                        URI.create("http://203.0.113.21/peers")
                 )
         };
 
