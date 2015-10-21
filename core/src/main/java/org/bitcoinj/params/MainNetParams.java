@@ -21,6 +21,8 @@ import org.bitcoinj.core.*;
 import org.bitcoinj.net.discovery.*;
 
 import java.net.*;
+import java.util.Arrays;
+import java.util.Collections;
 
 import static com.google.common.base.Preconditions.*;
 
