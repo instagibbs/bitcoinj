@@ -70,6 +70,7 @@ public class MainNetParams extends AbstractBitcoinNetParams {
                 "bitseed.xf2.org",             // Jeff Garzik
                 "bitcoin.jonasschnelli.ch",    // Jonas Schnelli
         };
+        Collections.shuffle(Arrays.asList(dnsSeeds));
         httpSeeds = new HttpDiscovery.Details[] {
                 new HttpDiscovery.Details(
                         ECKey.fromPublicOnly(BaseEncoding.base16().decode(
