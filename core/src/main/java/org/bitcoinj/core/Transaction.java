@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.util.*;
 
 import static org.bitcoinj.core.Utils.*;
@@ -1017,12 +1018,16 @@ public class Transaction extends ChildMessage {
 
             ByteArrayOutputStream bos = new UnsafeByteArrayOutputStream(length == UNKNOWN_LENGTH ? 256 : length + 4);
             bitcoinSerialize(bos);
+            ByteArrayOutputStream bos2 = new UnsafeByteArrayOutputStream(length == UNKNOWN_LENGTH ? 256 : length + 4);
+            segWitSerialize(bos2, sigHashType, inputIndex);
             // We also have to write a hash type (sigHashType is actually an unsigned char)
             uint32ToByteStreamLE(0x000000ff & sigHashType, bos);
+            uint32ToByteStreamLE(0x000000ff & sigHashType, bos2);
             // Note that this is NOT reversed to ensure it will be signed correctly. If it were to be printed out
             // however then we would expect that it is IS reversed.
             Sha256Hash hash = Sha256Hash.twiceOf(bos.toByteArray());
             bos.close();
+            bos2.close();
 
             // Put the transaction back to how we found it.
             this.inputs = inputs;
@@ -1035,6 +1040,95 @@ public class Transaction extends ChildMessage {
         } catch (IOException e) {
             throw new RuntimeException(e);  // Cannot happen.
         }
+    }
+
+    //Need to do hash-caching
+    protected void segWitSerialize(OutputStream stream, byte sigHashType, int index) throws IOException {
+
+        /*
+        1. nVersion of the transaction
+        2. hashPrevouts
+        3. hashSequence
+        4. transaction id and output index of the output spent by this input
+        5. subscript of the input
+        6. value of the output spent by this input
+        7. nSequence of the input
+        8. hashOutputs
+        9. nLocktime of the transaction
+        10. sighash type of the signature
+        */
+
+        //1. nVersion of the transaction
+        uint32ToByteStreamLE(version, stream);
+
+        //2. hashPrevouts
+        if ((sigHashType & SIGHASH_ANYONECANPAY_VALUE) == SIGHASH_ANYONECANPAY_VALUE) {
+            uint32ToByteStreamLE(0, stream);
+        }
+        else {
+            ByteArrayOutputStream bos = new UnsafeByteArrayOutputStream(length == UNKNOWN_LENGTH ? 256 : length + 4);
+            for (int i=0; i<this.inputs.size(); i++) {
+                bos.write(inputs.get(i).getOutpoint().bitcoinSerialize());
+            }
+            Sha256Hash hash = Sha256Hash.twiceOf(bos.toByteArray());
+            stream.write(hash.getBytes());
+        }
+
+        //3. hashSequence
+        if ((sigHashType & SIGHASH_ANYONECANPAY_VALUE) != SIGHASH_ANYONECANPAY_VALUE &&
+                (sigHashType & 0x1f) != SigHash.SINGLE.ordinal() + 1 &&
+                (sigHashType & 0x1f) != SigHash.NONE.ordinal() + 1) {
+            ByteArrayOutputStream bos = new UnsafeByteArrayOutputStream(length == UNKNOWN_LENGTH ? 256 : length + 4);
+            for (int i=0; i<this.inputs.size(); i++) {
+                bos.write(new Long(inputs.get(i).getSequenceNumber()).byteValue());
+            }
+            Sha256Hash hash = Sha256Hash.twiceOf(bos.toByteArray());
+            stream.write(hash.getBytes());
+        }
+        else {
+            uint32ToByteStreamLE(0, stream);
+        }
+
+        //4. transaction id and output index of the output spent by this input
+        stream.write(inputs.get(index).getOutpoint().bitcoinSerialize());
+
+        //5. subscript of the input
+        this.inputs.get(index).getScriptBytes(); //??
+
+        //6. value of the output spent by this input
+        long nAmount = this.inputs.get(index).getOutpoint().getConnectedOutput().getValue().getValue();
+        byte[] lAmountBytes = ByteBuffer.allocate(Long.SIZE / Byte.SIZE).putLong(nAmount).array();
+        stream.write(lAmountBytes);
+
+        //7. nSequence of the input
+        long nSeqNumber = new Long(inputs.get(index).getSequenceNumber()).byteValue();
+        byte[] lSequenceBytes = ByteBuffer.allocate(Long.SIZE / Byte.SIZE).putLong(nSeqNumber).array();
+        stream.write(lSequenceBytes);
+
+        //8. hashOutputs
+        if ((sigHashType & 0x1f) != SigHash.SINGLE.ordinal() + 1 &&
+                (sigHashType & 0x1f) != SigHash.NONE.ordinal() + 1) {
+            ByteArrayOutputStream bos = new UnsafeByteArrayOutputStream(length == UNKNOWN_LENGTH ? 256 : length + 4);
+            for (int i=0; i<this.outputs.size(); i++) {
+                bos.write(outputs.get(i).bitcoinSerialize());
+            }
+            Sha256Hash hash = Sha256Hash.twiceOf(bos.toByteArray());
+            stream.write(hash.getBytes());
+        }
+        else if ((sigHashType & 0x1f) == SigHash.SINGLE.ordinal() + 1 && index <= outputs.size()) {
+            Sha256Hash hash = Sha256Hash.twiceOf(outputs.get(index).bitcoinSerialize());
+            stream.write(hash.getBytes());
+        }
+        else {
+            uint32ToByteStreamLE(0, stream);
+        }
+
+        //9. nLocktime of the transaction
+        byte[] lbytes = ByteBuffer.allocate(Long.SIZE / Byte.SIZE).putLong(this.lockTime).array();
+        stream.write(lbytes);
+
+        //10. sighash type of the signature
+         //stream.write(sigHashType); Taken care of in function
     }
 
     @Override
