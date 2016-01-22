@@ -88,6 +88,8 @@ public class Block extends Message {
     public static final long BLOCK_VERSION_BIP65 = 4;
     /** Block version bitmask for BIP101: Increase maximum blocksize */
     public static final long BLOCK_VERSION_MASK_BIP101 = 0x20000007;
+    /** Block version introduced in BIP 141: Segregated Witness */
+    public static final long BLOCK_VERSION_BIP141 = 5;
 
     // Fields defined as part of the protocol format.
     private long version;

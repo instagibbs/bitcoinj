@@ -57,6 +57,8 @@ public abstract class NetworkParameters {
     public static final String ID_TESTNET = "org.bitcoin.test";
     /** The string returned by getId() for regtest mode. */
     public static final String ID_REGTEST = "org.bitcoin.regtest";
+    /** The string returned by getId() for the segnet. */
+    public static final String ID_SEGNET = "org.bitcoin.seg";
     /** Unit test network. */
     public static final String ID_UNITTESTNET = "org.bitcoinj.unittest";
 
@@ -64,6 +66,8 @@ public abstract class NetworkParameters {
     public static final String PAYMENT_PROTOCOL_ID_MAINNET = "main";
     /** The string used by the payment protocol to represent the test net. */
     public static final String PAYMENT_PROTOCOL_ID_TESTNET = "test";
+    /** The string used by the payment protocol to represent the segnet. */
+    public static final String PAYMENT_PROTOCOL_ID_SEGNET = "seg";
     /** The string used by the payment protocol to represent unit testing (note that this is non-standard). */
     public static final String PAYMENT_PROTOCOL_ID_UNIT_TESTS = "unittest";
     public static final String PAYMENT_PROTOCOL_ID_REGTEST = "regtest";
@@ -76,6 +80,7 @@ public abstract class NetworkParameters {
     protected long packetMagic;  // Indicates message origin network and is used to seek to the next message when stream state is unknown.
     protected int addressHeader;
     protected int p2shHeader;
+    protected int p2wpkh;
     protected int dumpedPrivateKeyHeader;
     protected int interval;
     protected int targetTimespan;
